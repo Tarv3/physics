@@ -1,17 +1,6 @@
 use nalgebra::Vector2;
 use nalgebra;
 
-pub struct Circle {
-    radius: f32,
-}
-impl Circle {
-    pub fn new(radius: f32) -> Self {
-        Self { radius }
-    }
-    pub fn moi(&self, mass: f32) -> f32 {
-        self.radius * self.radius * mass * 0.5
-    }
-}
 #[derive(Debug, PartialEq)]
 pub struct Moment {
     pub velocity: Vector2<f32>,
@@ -52,6 +41,9 @@ impl Moment {
     }
     pub fn add_velocity(&mut self, accel: Vector2<f32>) {
         self.velocity += accel;
+    }
+    pub fn add_rotation(&mut self, rot: f32) {
+        self.rps += rot;
     }
     pub fn apply_force(&mut self, force: Vector2<f32>, at: Vector2<f32>) {
         let lin_force = vector_projection(force, at);
@@ -99,10 +91,9 @@ mod tests {
     use nalgebra::Vector2;
     #[test]
     fn simple() {
-        let circle = momentum::Circle::new(10.0);
-        let moment = momentum::Moment::new(Vector2::new(1.0, 0.0), 1.0, 10.0, circle.moi(10.0));
+        let moment = momentum::Moment::new(Vector2::new(1.0, 0.0), 1.0, 10.0, 500.0);
         let mut moment2 =
-            momentum::Moment::new(Vector2::new(1.0, 0.0), 0.0, 10.0, circle.moi(10.0));
+            momentum::Moment::new(Vector2::new(1.0, 0.0), 0.0, 10.0, 500.0);
         moment2.apply_force(Vector2::new(0.0, 1.0), Vector2::new(10.0, 0.0));
         assert_eq!(
             Vector2::new(10.0, 0.0),

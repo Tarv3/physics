@@ -1,5 +1,9 @@
-use nalgebra::Vector2;
+use nalgebra::{Vector2, Unit};
 use nalgebra;
+
+pub trait Momentum {
+    fn moi(&self, mass: f32) -> f32;
+}
 
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub struct LinearMomentum {
@@ -24,10 +28,11 @@ impl LinearMomentum {
     pub fn apply_force(&mut self, force: Vector2<f32>) {
         self.velocity += force * self.inv_mass;
     }
-    pub fn change(&self, other: LinearMomentum, normal: Vector2<f32>) -> Vector2<f32> {
+    // return required change to self
+    pub fn change(&self, other: LinearMomentum, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
         -2.0 * other.mass / (self.mass + other.mass)
             * nalgebra::dot(&(self.velocity - other.velocity), &normal)
-            / nalgebra::dot(&normal, &normal) * normal
+            * normal.as_ref()
     }
 }
 
@@ -86,10 +91,11 @@ impl Moment {
         self.linear_moment.apply_force(lin_force);
         self.angular_moment.apply_force(angular_force, at);
     }
-    pub fn velocity_at(&self, at: Vector2<f32>) -> Vector2<f32> {
-        self.linear_moment.velocity
+    pub fn lin_momentum_at(&self, at: Vector2<f32>) -> LinearMomentum{
+        let velocity = self.linear_moment.velocity
             + self.angular_moment
-                .get_linear_velocity(at, self.linear_moment.mass)
+                .get_linear_velocity(at, self.linear_moment.mass);
+        LinearMomentum::new(velocity, self.linear_moment.mass)
     }
     pub fn apply_change_velocity(&mut self, change: Vector2<f32>, at: Vector2<f32>) {
         let mass = self.linear_moment.mass;
@@ -113,17 +119,23 @@ pub fn perp(vector: Vector2<f32>) -> Vector2<f32> {
 #[cfg(test)]
 mod tests {
     use momentum;
-    use nalgebra::Vector2;
+    use nalgebra::{Vector2, Unit};
     #[test]
     fn simple() {
         let moment = momentum::Moment::new(Vector2::new(1.0, 0.0), 1.0, 10.0, 500.0);
         let mut moment2 = momentum::Moment::new(Vector2::new(1.0, 0.0), 0.0, 10.0, 500.0);
         moment2.apply_force(Vector2::new(0.0, 1.0), Vector2::new(10.0, 0.0));
-        
         assert_eq!(
             momentum::Moment::new(Vector2::new(1.0, 0.0), 0.020000001, 10.0, 500.0),
             moment2
         );
+    }
+    #[test]
+    fn collisions() {
+        let moment = momentum::LinearMomentum::new(Vector2::new(1.0, 1.0), 10.0);
+        let moment2 = momentum::LinearMomentum::new(Vector2::new(-1.0, 1.0), 10.0);
+
+        assert_eq!(Vector2::new(-2.0, 0.0), moment.change(moment2, Unit::new_normalize(Vector2::new(-1.0, 0.0))));
     }
 
 }

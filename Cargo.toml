@@ -5,3 +5,4 @@ authors = ["Josh"]
 
 [dependencies]
 nalgebra = "*"
+ncollide = "0.14"

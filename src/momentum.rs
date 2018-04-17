@@ -28,6 +28,9 @@ impl LinearMomentum {
     pub fn apply_force(&mut self, force: Vector2<f32>) {
         self.velocity += force * self.inv_mass;
     }
+    pub fn reflect(&self, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
+        -2.0 * vector_projection(self.velocity, *normal.as_ref())
+    }
     // return required change to self
     pub fn change(&self, other: LinearMomentum, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
         -2.0 * other.mass / (self.mass + other.mass)
@@ -134,8 +137,10 @@ mod tests {
     fn collisions() {
         let moment = momentum::LinearMomentum::new(Vector2::new(1.0, 1.0), 10.0);
         let moment2 = momentum::LinearMomentum::new(Vector2::new(-1.0, 1.0), 10.0);
+        let moment3 = momentum::LinearMomentum::new(Vector2::new(1.0, -1.0), 10.0);
 
         assert_eq!(Vector2::new(-2.0, 0.0), moment.change(moment2, Unit::new_normalize(Vector2::new(-1.0, 0.0))));
+        assert_eq!(Vector2::new(0.0, 2.0), moment3.reflect(Unit::new_normalize(Vector2::new(0.0, 1.0))));
     }
 
 }

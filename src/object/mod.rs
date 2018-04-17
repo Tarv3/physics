@@ -1,13 +1,12 @@
 use nalgebra::{Isometry, Isometry2, Point2, Translation, Unit, UnitComplex, Vector2,
                core::dimension::U2};
-use ncollide::{query, query::Contact, shape::Shape, shape};
+use ncollide::{query, shape, query::Contact, shape::Shape};
 use momentum::{LinearMomentum, Momentum};
+use collision::*;
 
 mod test;
 pub mod moving;
 // called by a collision with an object that has some momentum
-
-
 
 pub struct Transformation {
     pub position: Point2<f32>,
@@ -67,6 +66,33 @@ impl<T: Shape<Point2<f32>, Isometry2<f32>>> Object<T> {
             prediction,
         )
     }
+}
+
+impl<T: Shape<Point2<f32>, Isometry2<f32>>> ObjectContact for Object<T> {
+    fn transformation(&self) -> &Transformation {
+        &self.transformation
+    }
+    fn shape(&self) -> &Shape<Point2<f32>, Isometry2<f32>> {
+        &self.shape
+    }
+}
+
+impl<T: Shape<Point2<f32>, Isometry2<f32>>> CollisionTime for Object<T> {
+    fn velocity(&self) -> Vector2<f32> {
+        Vector2::new(0.0, 0.0)
+    }
+}
+
+impl<T: Shape<Point2<f32>, Isometry2<f32>>> Collidable for Object<T> {
+    fn collision(
+        &self,
+        momentum: LinearMomentum,
+        normal: Unit<Vector2<f32>>,
+        _: Point2<f32>,
+    ) -> Vector2<f32> {
+        momentum.reflect(normal)
+    }
+    fn change_velocity(&mut self, _: Vector2<f32>, _: Point2<f32>) {}
 }
 
 impl Momentum for Object<shape::Cuboid<Vector2<f32>>> {

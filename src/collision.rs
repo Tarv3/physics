@@ -1,7 +1,7 @@
 use nalgebra::{Isometry2, Point, Point2, Unit, Vector2};
 use ncollide::{query, query::Contact, shape::Shape};
 use momentum::{LinearMomentum, Momentum};
-use object::Transformation;
+use object::transformation::Transformation;
 
 pub trait ObjectContact {
     fn transformation(&self) -> &Transformation;
@@ -37,6 +37,10 @@ pub trait CollisionTime: ObjectContact {
             other.shape(),
         )
     }
+    fn move_self(&mut self, time: f32) {
+        let move_amount = self.velocity() * time;
+        self.move_pos(move_amount);
+    }
 }
 
 pub trait Collidable: CollisionTime + ObjectContact {
@@ -59,10 +63,8 @@ where
     let toi = first.toi(second);
     if let Some(impact_time) = toi {
         if time >= impact_time {
-            let mut first_moved = first.velocity() * impact_time;
-            let mut second_moved = second.velocity() * impact_time;
-            first.move_pos(first_moved);
-            second.move_pos(second_moved);
+            first.move_self(impact_time);
+            second.move_self(impact_time);
             let contact = first.contact_point(second, 0.5);
             if let Some(collision) = contact {
                 let first_to =
@@ -73,18 +75,12 @@ where
                 let dv = second.collision(first_momentum, collision.normal, second_to);
                 first.change_velocity(dv, first_to);
                 second.change_velocity(-dv, second_to);
-                first_moved = first.velocity() * (time - impact_time);
-                second_moved = second.velocity() * (time - impact_time);
-                first.move_pos(first_moved);
-                second.move_pos(second_moved);
-            }
-            else {
-                let first_move = first.velocity() * time;
-                let second_move = second.velocity() * time;
-                first.move_pos(first_move);
-                second.move_pos(second_move);
+                first.move_self(time - impact_time);
+                second.move_self(time - impact_time);
+            } else {
+                first.move_self(time);
+                second.move_self(time);
             }
         }
     }
 }
-

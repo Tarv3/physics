@@ -77,10 +77,10 @@ where
                 second.change_velocity(-dv, second_to);
                 first.move_self(time - impact_time);
                 second.move_self(time - impact_time);
+                return; 
             }
-        } else {
-            first.move_self(time);
-            second.move_self(time);
         }
     }
+    first.move_self(time);
+    second.move_self(time);
 }

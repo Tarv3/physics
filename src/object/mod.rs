@@ -1,4 +1,4 @@
-use nalgebra::{Isometry, Isometry2, Point2, Translation, Unit, UnitComplex, Vector2};
+use nalgebra::{Isometry2, Point2, Unit, Vector2};
 use ncollide::{query, shape, query::Contact, shape::Shape};
 use momentum::{LinearMomentum, AMomentum};
 use self::transformation::Transformation;

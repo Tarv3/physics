@@ -1,12 +1,11 @@
 use nalgebra::{Isometry, Isometry2, Point2, Translation, Unit, UnitComplex, Vector2,
                core::dimension::U2};
 use ncollide::{query, shape, query::Contact, shape::Shape};
-use momentum::{LinearMomentum, Momentum};
+use momentum::{LinearMomentum, AMomentum};
 use collision::*;
 
 mod test;
 pub mod moving;
-// called by a collision with an object that has some momentum
 
 pub struct Transformation {
     pub position: Point2<f32>,
@@ -47,6 +46,12 @@ impl<T: Shape<Point2<f32>, Isometry2<f32>>> Object<T> {
             transformation: Transformation::new(position, rotation),
         }
     }
+    pub fn new_from_transformation(shape: T, transformation: Transformation) -> Self {
+        Self {
+            shape,
+            transformation,
+        }
+    }
     pub fn translate(&mut self, vector: Vector2<f32>) {
         self.transformation.translate(vector);
     }
@@ -72,6 +77,9 @@ impl<T: Shape<Point2<f32>, Isometry2<f32>>> ObjectContact for Object<T> {
     fn transformation(&self) -> &Transformation {
         &self.transformation
     }
+    fn transformation_mut(&mut self) -> &mut Transformation {
+        &mut self.transformation
+    }
     fn shape(&self) -> &Shape<Point2<f32>, Isometry2<f32>> {
         &self.shape
     }
@@ -95,13 +103,13 @@ impl<T: Shape<Point2<f32>, Isometry2<f32>>> Collidable for Object<T> {
     fn change_velocity(&mut self, _: Vector2<f32>, _: Point2<f32>) {}
 }
 
-impl Momentum for Object<shape::Cuboid<Vector2<f32>>> {
+impl AMomentum for Object<shape::Cuboid<Vector2<f32>>> {
     fn moi(&self, mass: f32) -> f32 {
         let dimensions = self.shape.half_extents();
         0.5 * mass * (dimensions.x * dimensions.x + dimensions.y * dimensions.y)
     }
 }
-impl Momentum for Object<shape::Ball<f32>> {
+impl AMomentum for Object<shape::Ball<f32>> {
     fn moi(&self, mass: f32) -> f32 {
         0.5 * mass * self.shape.radius() * self.shape.radius()
     }

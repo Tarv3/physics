@@ -1,4 +1,4 @@
-use nalgebra::{Isometry, Isometry2, Point2, Translation, Unit, UnitComplex, Vector2,
+use nalgebra::{Isometry, Isometry2, Point, Point2, Translation, Unit, UnitComplex, Vector2,
                core::dimension::U2};
 use ncollide::{query, shape, query::Contact, shape::Shape};
 use momentum::{LinearMomentum, Momentum};
@@ -6,15 +6,23 @@ use object::Transformation;
 
 pub trait ObjectContact {
     fn transformation(&self) -> &Transformation;
+    fn transformation_mut(&mut self) -> &mut Transformation;
     fn shape(&self) -> &Shape<Point2<f32>, Isometry2<f32>>;
-    fn contact_point<T: ObjectContact>(&self, other: &T, prediction: f32) -> Option<Contact<Point2<f32>>> {
+    fn contact_point<T: ObjectContact>(
+        &self,
+        other: &T,
+        prediction: f32,
+    ) -> Option<Contact<Point2<f32>>> {
         query::contact(
             &self.transformation().get_iso(),
             self.shape(),
             &other.transformation().get_iso(),
             other.shape(),
-            prediction
+            prediction,
         )
+    }
+    fn move_pos(&mut self, vector: Vector2<f32>) {
+        self.transformation_mut().translate(vector);
     }
 }
 
@@ -35,11 +43,49 @@ pub trait CollisionTime: ObjectContact {
 pub trait Collidable: CollisionTime + ObjectContact {
     // Must return the required change of velocity to the input linear momentum
     // "at" is in world coordinate system not int reference to object
-    fn collision (
+    fn collision(
         &self,
         momentum: LinearMomentum,
         normal: Unit<Vector2<f32>>,
-        at: Point2<f32>
+        at: Point2<f32>,
     ) -> Vector2<f32>;
     fn change_velocity(&mut self, vector: Vector2<f32>, at: Point2<f32>);
 }
+
+pub fn collide<T, U>(first: &mut T, second: &mut U, time: f32)
+where
+    T: Momentum + Collidable,
+    U: Collidable,
+{
+    let toi = first.toi(second);
+    if let Some(impact_time) = toi {
+        if time >= impact_time {
+            let mut first_moved = first.velocity() * impact_time;
+            let mut second_moved = second.velocity() * impact_time;
+            first.move_pos(first_moved);
+            second.move_pos(second_moved);
+            let contact = first.contact_point(second, 0.5);
+            if let Some(collision) = contact {
+                let first_to =
+                    Point::from_coordinates(first.transformation().vector_to(collision.world1));
+                let second_to =
+                    Point::from_coordinates(second.transformation().vector_to(collision.world2));
+                let first_momentum = first.momentum_at(first_to.coords);
+                let dv = second.collision(first_momentum, collision.normal, second_to);
+                first.change_velocity(dv, first_to);
+                second.change_velocity(-dv, second_to);
+                first_moved = first.velocity() * (time - impact_time);
+                second_moved = second.velocity() * (time - impact_time);
+                first.move_pos(first_moved);
+                second.move_pos(second_moved);
+            }
+            else {
+                let first_move = first.velocity() * time;
+                let second_move = second.velocity() * time;
+                first.move_pos(first_move);
+                second.move_pos(second_move);
+            }
+        }
+    }
+}
+

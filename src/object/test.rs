@@ -15,6 +15,7 @@ fn object() {
         Point2::new(0.0, -1.0),
         0.0,
     );
+    let moi = object.moi(10.0);
     let contact1 = object.contact_with(&object2, 1.0);
     let contact2 = object.contact_with(&object3, 1.0);
     println!("{:?}", contact1);

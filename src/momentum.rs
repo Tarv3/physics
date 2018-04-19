@@ -1,8 +1,11 @@
 use nalgebra::{Vector2, Unit};
 use nalgebra;
 
-pub trait Momentum {
+pub trait AMomentum {
     fn moi(&self, mass: f32) -> f32;
+}
+pub trait Momentum {
+    fn momentum_at(&self, at: Vector2<f32>) -> LinearMomentum;
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]

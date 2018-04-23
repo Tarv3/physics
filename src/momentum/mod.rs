@@ -35,13 +35,13 @@ impl Moment {
     pub fn add_rotation(&mut self, rot: f32) {
         self.angular_moment.add_rotation(rot);
     }
-    pub fn apply_force(&mut self, force: Vector2<f32>, at: Vector2<f32>) {
+    pub fn apply_force(&mut self, force: Vector2<f32>, _at: Vector2<f32>) {
         // let lin_force = vector_projection(force, at);
         // let angular_force = force - lin_force;
         self.linear_moment.apply_force(force);
         // self.angular_moment.apply_force(angular_force, at);
     }
-    pub fn lin_momentum_at(&self, at: Vector2<f32>) -> LinearMomentum{
+    pub fn lin_momentum_at(&self, _at: Vector2<f32>) -> LinearMomentum{
         // let velocity = self.linear_moment.velocity
         //     + self.angular_moment
         //         .get_linear_velocity(at, self.linear_moment.inv_mass);

@@ -13,10 +13,6 @@ pub trait Momentum {
     fn momentum_at(&self, at: Vector2<f32>) -> LinearMomentum;
 }
 
-
-
-
-
 #[derive(Debug, PartialEq)]
 pub struct Moment {
     pub angular_moment: AngularMomentum,

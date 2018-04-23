@@ -26,12 +26,22 @@ impl LinearMomentum {
     pub fn apply_force(&mut self, force: Vector2<f32>) {
         self.velocity += force * self.inv_mass;
     }
+    // returns velocity required to reflect the linear moment off of the normal
     pub fn reflect(&self, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
         -2.0 * vector_projection(self.velocity, *normal.as_ref())
     }
-    // return required change to self
+    pub fn mreflect(&self, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
+        -2.0 * self.mass * vector_projection(self.velocity, *normal.as_ref())
+    }
+    // return required change to self velocity
     pub fn change(&self, other: LinearMomentum, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
         -2.0 * other.mass / (self.mass + other.mass)
+            * nalgebra::dot(&(self.velocity - other.velocity), &normal)
+            * normal.as_ref()
+    }
+    // return required change to self momentum
+    pub fn mchange(&self, other: LinearMomentum, normal: Unit<Vector2<f32>>) -> Vector2<f32> {
+        -2.0 * self.mass * other.mass / (self.mass + other.mass)
             * nalgebra::dot(&(self.velocity - other.velocity), &normal)
             * normal.as_ref()
     }

@@ -79,9 +79,9 @@ impl<T: Shape<Point2<f32>, Isometry2<f32>>> Collidable for Object<T> {
         normal: Unit<Vector2<f32>>,
         _: Point2<f32>,
     ) -> Vector2<f32> {
-        momentum.reflect(normal)
+        momentum.mreflect(normal)
     }
-    fn change_velocity(&mut self, _: Vector2<f32>, _: Point2<f32>) {}
+    fn apply_force(&mut self, _: Vector2<f32>, _: Point2<f32>) {}
 }
 
 impl AMomentum for Object<shape::Cuboid<Vector2<f32>>> {

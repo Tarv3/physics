@@ -69,10 +69,10 @@ where
         let at = self.object.transformation.vector_to(at);
         let momentum_at = self.momentum.lin_momentum_at(at);
 
-        momentum.change(momentum_at, normal)
+        momentum.mchange(momentum_at, normal)
     }
-    fn change_velocity(&mut self, velocity: Vector2<f32>, at: Point2<f32>) {
-        self.momentum.apply_change_velocity(velocity, at.coords);
+    fn apply_force(&mut self, velocity: Vector2<f32>, at: Point2<f32>) {
+        self.momentum.apply_force(velocity, at.coords);
     }
 }
 

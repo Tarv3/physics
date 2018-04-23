@@ -44,7 +44,7 @@ pub trait CollisionTime: ObjectContact {
 }
 
 pub trait Collidable: CollisionTime + ObjectContact {
-    // Must return the required change of velocity to the input linear momentum
+    // Must return the required change of linear momentum to the input linear momentum
     // "at" is in world coordinate system not int reference to object
     fn collision(
         &self,
@@ -52,7 +52,7 @@ pub trait Collidable: CollisionTime + ObjectContact {
         normal: Unit<Vector2<f32>>,
         at: Point2<f32>,
     ) -> Vector2<f32>;
-    fn change_velocity(&mut self, vector: Vector2<f32>, at: Point2<f32>);
+    fn apply_force(&mut self, vector: Vector2<f32>, at: Point2<f32>);
 }
 
 pub fn collide<T, U>(first: &mut T, second: &mut U, time: f32)
@@ -73,8 +73,8 @@ where
                     Point::from_coordinates(second.transformation().vector_to(collision.world2));
                 let first_momentum = first.momentum_at(first_to.coords);
                 let dv = second.collision(first_momentum, collision.normal, second_to);
-                first.change_velocity(dv, first_to);
-                second.change_velocity(-dv, second_to);
+                first.apply_force(dv, first_to);
+                second.apply_force(-dv, second_to);
                 first.move_self(time - impact_time);
                 second.move_self(time - impact_time);
                 return; 

@@ -11,6 +11,27 @@ where
     momentum: Moment,
 }
 
+impl<T: Shape<Point2<f32>, Isometry2<f32>>> MovingObject<T> {
+    pub fn accelerate(&mut self, acceleration: Vector2<f32>) {
+        self.momentum.add_velocity(acceleration)
+    }
+    pub fn accelerate_rotation(&mut self, rotation: f32) {
+        self.momentum.angular_moment.add_rotation(rotation); 
+    }
+    pub fn object(&self) -> &Object<T> {
+        &self.object
+    }
+    pub fn update(&mut self, time: f32) {
+        let angle = self.momentum.angular_moment.rps * time;
+        let translate = self.momentum.linear_moment.velocity * time;
+        self.object.transformation.translate(translate);
+        self.object.transformation.rotate(angle);
+    }
+    pub fn update_rot(&mut self, time: f32) {
+        let angle = self.momentum.angular_moment.rps * time;
+        self.object.transformation.rotate(angle);
+    }
+}
 impl<T> ObjectContact for MovingObject<T>
 where
     T: Shape<Point2<f32>, Isometry2<f32>>,
@@ -73,10 +94,13 @@ impl PCuboid {
     pub fn new(
         half_extents: Vector2<f32>,
         transformation: Transformation,
-        momentum: Moment,
+        velocity: Vector2<f32>,
+        rps: f32,
+        mass: f32,
     ) -> Self {
-        let shape = Cuboid::new(half_extents);
+        let shape: Cuboid<Vector2<f32>> = Cuboid::new(half_extents);
         let object = Object::new_from_transformation(shape, transformation);
+        let momentum = Moment::new(velocity, rps, mass, object.moi(mass));
         MovingObject { object, momentum }
     }
 }
@@ -84,9 +108,16 @@ impl PCuboid {
 pub type PBall = MovingObject<Ball<f32>>;
 
 impl PBall {
-    pub fn new(radius: f32, transformation: Transformation, momentum: Moment) -> Self {
-        let shape = Ball::new(radius);
+    pub fn new(
+        radius: f32,
+        transformation: Transformation,
+        velocity: Vector2<f32>,
+        rps: f32,
+        mass: f32,
+    ) -> Self {
+        let shape: Ball<f32> = Ball::new(radius);
         let object = Object::new_from_transformation(shape, transformation);
+        let momentum = Moment::new(velocity, rps, mass, object.moi(mass));
         MovingObject { object, momentum }
     }
 }

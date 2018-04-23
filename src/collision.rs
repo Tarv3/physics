@@ -1,6 +1,6 @@
 use nalgebra::{Isometry2, Point, Point2, Unit, Vector2};
 use ncollide::{query, query::Contact, shape::Shape};
-use momentum::{LinearMomentum, Momentum};
+use momentum::{linear::LinearMomentum, Momentum};
 use object::transformation::Transformation;
 
 pub trait ObjectContact {
